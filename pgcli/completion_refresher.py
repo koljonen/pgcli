@@ -1,4 +1,5 @@
 import threading
+import os
 try:
     from collections import OrderedDict
 except ImportError:
@@ -6,7 +7,7 @@ except ImportError:
 
 from .pgcompleter import PGCompleter
 from .pgexecute import PGExecute
-
+from .config import get_config, get_casing_file
 
 class CompletionRefresher(object):
 
@@ -16,7 +17,8 @@ class CompletionRefresher(object):
         self._completer_thread = None
         self._restart_refresh = threading.Event()
 
-    def refresh(self, executor, special, callbacks, history=None):
+    def refresh(self, executor, special, callbacks, history=None,
+        casing_file=None):
         """
         Creates a PGCompleter object and populates it with the relevant
         completion suggestions in a background thread.
@@ -24,6 +26,7 @@ class CompletionRefresher(object):
         executor - PGExecute object, used to extract the credentials to connect
                    to the database.
         special - PGSpecial object used for creating a new completion object.
+        casing_file - path to file containing casing preferences
         callbacks - A function or a list of functions to call after the thread
                     has completed the refresh. The newly created completion
                     object will be passed in as an argument to each callback.
@@ -34,7 +37,7 @@ class CompletionRefresher(object):
         else:
             self._completer_thread = threading.Thread(
                 target=self._bg_refresh,
-                args=(executor, special, callbacks, history),
+                args=(executor, special, callbacks, history, casing_file),
                 name='completion_refresh')
             self._completer_thread.setDaemon(True)
             self._completer_thread.start()
@@ -44,8 +47,10 @@ class CompletionRefresher(object):
     def is_refreshing(self):
         return self._completer_thread and self._completer_thread.is_alive()
 
-    def _bg_refresh(self, pgexecute, special, callbacks, history=None):
-        completer = PGCompleter(smart_completion=True, pgspecial=special)
+    def _bg_refresh(self, pgexecute, special, callbacks, history=None,
+      casing_file=None):
+        completer = PGCompleter(smart_completion=True, pgspecial=special,
+          casing_file = casing_file)
 
         # Create a new pgexecute method to popoulate the completions.
         e = pgexecute
@@ -115,3 +120,15 @@ def refresh_types(completer, executor):
 @refresher('databases')
 def refresh_databases(completer, executor):
     completer.extend_database_names(executor.databases())
+
+@refresher('casing')
+def refresh_casing(completer, executor):
+    casing_file = completer.casing_file
+    if not casing_file:
+         casing_file = get_casing_file(get_config())
+    if not os.path.isfile(casing_file):
+        casing_prefs = '\n'.join(executor.casing())
+        with open(casing_file, 'w') as f:
+            f.write(casing_prefs)
+    with open(casing_file, 'r') as f:
+        completer.extend_casing([line.strip() for line in f])
