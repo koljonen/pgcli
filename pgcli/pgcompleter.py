@@ -36,11 +36,12 @@ class PGCompleter(Completer):
     functions = get_literals('functions')
     datatypes = get_literals('datatypes')
 
-    def __init__(self, smart_completion=True, pgspecial=None):
+    def __init__(self, smart_completion=True, pgspecial=None, casing_file=None):
         super(PGCompleter, self).__init__()
         self.smart_completion = smart_completion
         self.pgspecial = pgspecial
         self.prioritizer = PrevalenceCounter()
+        self.casing_file = casing_file
 
         self.reserved_words = set()
         for x in self.keywords:
@@ -51,6 +52,7 @@ class PGCompleter(Completer):
         self.dbmetadata = {'tables': {}, 'views': {}, 'functions': {},
                            'datatypes': {}}
         self.search_path = []
+        self.casing = {}
 
         self.all_completions = set(self.keywords + self.functions)
 
@@ -94,6 +96,14 @@ class PGCompleter(Completer):
                 metadata[schema] = {}
 
         self.all_completions.update(schemata)
+
+    def extend_casing(self, words):
+        """ extend casing data
+
+        :return:
+        """
+        # casing should be a dict {lowercasename:PreferredCasingName}
+        self.casing = dict((word.lower(), word) for word in words)
 
     def extend_relations(self, data, kind):
         """ extend metadata for tables or views
@@ -289,11 +299,14 @@ class PGCompleter(Completer):
                 lexical_priority = tuple(-ord(c) for c in self.unescape_name(item)) + (1,)
 
                 priority = type_priority, prio, sort_key, priority_func(item), lexical_priority
-
+                item = self.case(item)
                 matches.append(Match(
                     completion=Completion(item, -text_len, display_meta=meta),
                     priority=priority))
         return matches
+
+    def case(self, word):
+        return self.casing.get(word, word)
 
     def get_completions(self, document, complete_event, smart_completion=None):
         word_before_cursor = document.get_word_before_cursor(WORD=True)
@@ -348,14 +361,14 @@ class PGCompleter(Completer):
                 # User typed x.*; replicate "x." for all columns except the
                 # first, which gets the original (as we only replace the "*"")
                 sep = ', ' + self.escape_name(tables[0].ref) + '.'
-                collist = sep.join(c for c in flat_cols)
+                collist = sep.join(self.case(c) for c in flat_cols)
             elif len(scoped_cols) > 1:
                 # Multiple tables; qualify all columns
                 collist = ', '.join(t.ref + '.' + c.name for t, cs in colit()
                     for c in cs)
             else:
                 # Plain columns
-                collist = ', '.join(c for c in flat_cols)
+                collist = ', '.join(self.case(c) for c in flat_cols)
 
             return [Match(completion=Completion(collist, -1,
                 display_meta='columns', display='*'), priority=(1,1,1))]
@@ -368,7 +381,8 @@ class PGCompleter(Completer):
 
         def make_cond(tbl1, tbl2, col1, col2):
             prefix = '' if suggestion.parent else tbl1 + '.'
-            return prefix + col1 + ' = ' + tbl2 + '.' + col2
+            case = self.case
+            return prefix + case(col1) + ' = ' + tbl2 + '.' + case(col2)
 
         # Tables that are closer to the cursor get higher prio
         refprio = dict((tbl.ref, num) for num, tbl

@@ -44,8 +44,7 @@ from .pgexecute import PGExecute
 from .pgbuffer import PGBuffer
 from .completion_refresher import CompletionRefresher
 from .config import (
-    write_default_config, load_config, config_location, ensure_dir_exists,
-)
+    load_config, config_location, ensure_dir_exists, get_config)
 from .key_bindings import pgcli_bindings
 from .encodingutils import utf8tounicode
 from .__init__ import __version__
@@ -101,16 +100,8 @@ class PGCli(object):
         self.never_passwd_prompt = never_passwd_prompt
         self.pgexecute = pgexecute
 
-        from pgcli import __file__ as package_root
-        package_root = os.path.dirname(package_root)
-        
-        pgclirc_file = pgclirc_file or '%sconfig' % config_location()
-
-        default_config = os.path.join(package_root, 'pgclirc')
-        write_default_config(default_config, pgclirc_file)
-
         # Load config.
-        c = self.config = load_config(pgclirc_file, default_config)
+        c = self.config = get_config(pgclirc_file)
 
         self.logger = logging.getLogger(__name__)
         self.initialize_logging()
@@ -136,7 +127,8 @@ class PGCli(object):
 
         # Initialize completer
         smart_completion = c['main'].as_bool('smart_completion')
-        completer = PGCompleter(smart_completion, pgspecial=self.pgspecial)
+        completer = PGCompleter(smart_completion, pgspecial=self.pgspecial,
+            casing_file=self.casing_file)
         self.completer = completer
         self._completer_lock = threading.Lock()
         self.register_special_commands()
@@ -203,6 +195,13 @@ class PGCli(object):
         self.output_file = filename
         message = 'Writing to file "%s"' % self.output_file
         return [(None, None, None, message, '', True)]
+
+    @property
+    def casing_file(self):
+        casing_file = self.config['main']['casing_file']
+        if casing_file == 'default':
+            casing_file = config_location() + 'casing'
+        return casing_file
 
     def initialize_logging(self):
 
@@ -576,8 +575,8 @@ class PGCli(object):
 
         callback = functools.partial(self._on_completions_refreshed,
                                      persist_priorities=persist_priorities)
-        self.completion_refresher.refresh(
-            self.pgexecute, self.pgspecial, callback, history=history)
+        self.completion_refresher.refresh(self.pgexecute, self.pgspecial,
+            callback, history=history, casing_file=self.casing_file)
         return [(None, None, None,
                 'Auto-completion refresh started in the background.')]
 

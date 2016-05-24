@@ -9,7 +9,6 @@ import pgspecial as special
 from .packages.function_metadata import FunctionMetadata, ForeignKey
 from .encodingutils import unicode2utf8, PY2, utf8tounicode
 
-
 _logger = logging.getLogger(__name__)
 
 # Cast all database input to unicode automatically.
@@ -507,4 +506,48 @@ class PGExecute(object):
             cur.execute(query)
             for row in cur:
                 yield row
+
+
+    def casing(self):
+        """Yields the most common casing for names used in db functions"""
+        with self.conn.cursor() as cur:
+            query = '''
+          WITH Words AS (
+                SELECT regexp_split_to_table(prosrc, '\W+') AS Word, COUNT(1)
+                FROM pg_catalog.pg_proc P
+                JOIN pg_catalog.pg_namespace N ON N.oid = P.pronamespace
+                JOIN pg_catalog.pg_language L ON L.oid = P.prolang
+                WHERE L.lanname IN ('sql', 'plpgsql')
+                AND N.nspname NOT IN ('pg_catalog', 'information_schema')
+                GROUP BY Word
+            ),
+            OrderWords AS (
+                SELECT Word,
+                    ROW_NUMBER() OVER(PARTITION BY LOWER(Word) ORDER BY Count DESC)
+                FROM Words
+                WHERE Word ~* '.*[a-z].*'
+            ),
+            Names AS (
+                --Column names
+                SELECT attname AS Name
+                FROM pg_catalog.pg_attribute
+                UNION -- Table/view names
+                SELECT relname
+                FROM pg_catalog.pg_class
+                UNION -- Function names
+                SELECT proname
+                FROM pg_catalog.pg_proc
+                UNION -- Type names
+                SELECT typname
+                FROM pg_catalog.pg_type
+            )
+            SELECT Word
+            FROM OrderWords
+            WHERE LOWER(Word) IN (SELECT Name FROM Names)
+            AND Row_Number = 1;
+            '''
+            _logger.debug('Casing Query. sql: %r', query)
+            cur.execute(query)
+            for row in cur:
+                yield row[0]
 
