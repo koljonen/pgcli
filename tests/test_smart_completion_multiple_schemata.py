@@ -19,13 +19,14 @@ metadata = {
                             }},
             'functions': {
                             'public': [
-                                ['func1', '', '', False, False, False],
-                                ['func2', '', '', False, False, False]],
+                                ['func1', [], [], [], '', False, False,
+                                    False],
+                                ['func2', [], [], [], '', False, False,
+                                    False]],
                             'custom': [
-                                ['func3', '', '', False, False, False],
-                                ['set_returning_func',
-                                    'OUT x INT', 'SETOF INT',
-                                     False, False, True]],
+                                ['func3', [], [], [], '', False, False, False],
+                                ['set_returning_func', ['x'], ['integer'], ['o'],
+                                    'integer', False, False, True]],
                          },
             'datatypes': {
                             'public':   ['typ1', 'typ2'],
