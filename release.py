@@ -16,7 +16,6 @@ def skip_step():
     Asks for user's response whether to run a step. Default is yes.
     :return: boolean
     """
-    global CONFIRM_STEPS
 
     if CONFIRM_STEPS:
         choice = raw_input("--- Confirm step? (y/N) [y] ")
@@ -31,7 +30,6 @@ def run_step(*args):
     If yes (default), runs it.
     :param args: list of strings (command and args)
     """
-    global DRY_RUN
 
     cmd = args
     print(' '.join(cmd))
