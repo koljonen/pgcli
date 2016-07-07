@@ -1,6 +1,5 @@
 import traceback
 import logging
-import itertools
 import psycopg2
 import psycopg2.extras
 import psycopg2.extensions as ext
