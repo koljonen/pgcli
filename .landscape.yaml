@@ -1,0 +1,14 @@
+python-targets:
+  - 3
+  - 2
+pyflakes:
+  disable:
+    - F821  # a name is not defined - the same rule exists in pylint
+    - F811  # redefined function - the same rule exists in pylint
+pep8:
+  disable:
+    - W503  # line break before logical operator
+pylint:
+  disable:
+  - too-many-arguments
+  - too-many-locals
