@@ -11,8 +11,8 @@ import threading
 import shutil
 import functools
 import humanize
+import codecs
 from time import time
-from codecs import open
 
 
 import click
@@ -74,6 +74,9 @@ MetaQuery = namedtuple(
         'mutated',          # True if any subquery executed insert/update/delete
     ])
 MetaQuery.__new__.__defaults__ = ('', False, 0, False, False, False, False)
+
+def utf8_open(path, mode='r'):
+    return codecs.open(path, mode, encoding='utf-8')
 
 
 # no-op logging handler
@@ -185,7 +188,7 @@ class PGCli(object):
             message = '\\i: missing required argument'
             return [(None, None, None, message, '', False)]
         try:
-            with open(os.path.expanduser(pattern), encoding='utf-8') as f:
+            with utf8_open(os.path.expanduser(pattern)) as f:
                 query = f.read()
         except IOError as e:
             return [(None, None, None, str(e), '', False)]
@@ -408,7 +411,7 @@ class PGCli(object):
                     try:
                         if self.output_file and not document.text.startswith(('\\o ', '\\? ')):
                             try:
-                                with open(self.output_file, 'a', encoding='utf-8') as f:
+                                with utf8_open(self.output_file, 'a') as f:
                                     click.echo(document.text, file=f)
                                     click.echo('\n'.join(output), file=f)
                                     click.echo('', file=f) # extra newline

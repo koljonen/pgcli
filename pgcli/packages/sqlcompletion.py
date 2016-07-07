@@ -438,11 +438,11 @@ def suggest_based_on_last_token(token, stmt):
         return (Keyword(),)
 
 
-def identifies(id, ref):
-    """Returns true if string `id` matches TableReference `ref`"""
+def identifies(name, tbl):
+    """Returns true if string `name` matches TableReference `tbl`"""
 
-    return id == ref.alias or id == ref.name or (
-        ref.schema and (id == ref.schema + '.' + ref.name))
+    return name == tbl.alias or name == tbl.name or (
+        tbl.schema and (name == tbl.schema + '.' + tbl.name))
 
 
 def _allow_join_condition(statement):
