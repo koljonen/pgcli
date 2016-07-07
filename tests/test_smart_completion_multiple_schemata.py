@@ -59,7 +59,7 @@ def completer_with_aliases():
     return testdata.get_completer({'generate_aliases': True})
 
 @pytest.fixture
-def completer_aliases_casing(request):
+def completer_aliases_casing():
     return testdata.get_completer({'generate_aliases': True}, casing)
 
 @pytest.fixture

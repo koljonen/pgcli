@@ -66,7 +66,7 @@ def aliased_completer():
     return testdata.get_completer({'generate_aliases': True})
 
 @pytest.fixture
-def cased_aliased_completer(request):
+def cased_aliased_completer():
     return testdata.get_completer({'generate_aliases': True}, casing)
 
 @pytest.fixture
