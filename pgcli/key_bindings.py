@@ -30,7 +30,7 @@ def pgcli_bindings(get_vi_mode_enabled, set_vi_mode_enabled):
         buf.completer.smart_completion = not buf.completer.smart_completion
 
     @key_binding_manager.registry.add_binding(Keys.F3)
-    def _(event):
+    def _(event):  # pylint: disable=function-redefined
         """
         Enable/Disable Multiline Mode.
         """
@@ -39,7 +39,7 @@ def pgcli_bindings(get_vi_mode_enabled, set_vi_mode_enabled):
         buf.always_multiline = not buf.always_multiline
 
     @key_binding_manager.registry.add_binding(Keys.F4)
-    def _(event):
+    def _(event):  # pylint: disable=function-redefined
         """
         Toggle between Vi and Emacs mode.
         """
@@ -50,7 +50,7 @@ def pgcli_bindings(get_vi_mode_enabled, set_vi_mode_enabled):
         event.cli.editing_mode = EditingMode.VI if vi_mode else EditingMode.EMACS
 
     @key_binding_manager.registry.add_binding(Keys.Tab)
-    def _(event):
+    def _(event):  # pylint: disable=function-redefined
         """
         Force autocompletion at cursor.
         """
@@ -62,7 +62,7 @@ def pgcli_bindings(get_vi_mode_enabled, set_vi_mode_enabled):
             event.cli.start_completion(select_first=True)
 
     @key_binding_manager.registry.add_binding(Keys.ControlSpace)
-    def _(event):
+    def _(event):  # pylint: disable=function-redefined
         """
         Initialize autocompletion at cursor.
 
@@ -80,7 +80,7 @@ def pgcli_bindings(get_vi_mode_enabled, set_vi_mode_enabled):
             event.cli.start_completion(select_first=False)
 
     @key_binding_manager.registry.add_binding(Keys.ControlJ, filter=HasSelectedCompletion())
-    def _(event):
+    def _(event):  # pylint: disable=function-redefined
         """
         Makes the enter key work as the tab key only when showing the menu.
         """

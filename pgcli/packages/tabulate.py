@@ -17,13 +17,13 @@ if python_version_tuple()[0] < "3":
     from functools import partial
     _none_type = type(None)
     _int_type = int
-    _long_type = long
+    _long_type = long  # pylint: disable=undefined-variable
     _float_type = float
-    _text_type = unicode
+    _text_type = unicode  # pylint: disable=undefined-variable
     _binary_type = str
 
     def _is_file(f):
-        return isinstance(f, file)
+        return isinstance(f, file)  # pylint: disable=undefined-variable
 
 else:
     from itertools import zip_longest as izip_longest

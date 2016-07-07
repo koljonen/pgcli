@@ -835,4 +835,4 @@ def exception_formatter(e):
 
 
 if __name__ == "__main__":
-    cli()
+    cli()  # pylint: disable=no-value-for-parameter

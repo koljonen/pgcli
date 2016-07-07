@@ -18,7 +18,7 @@ def skip_step():
     """
 
     if CONFIRM_STEPS:
-        choice = raw_input("--- Confirm step? (y/N) [y] ")
+        choice = raw_input("--- Confirm step? (y/N) [y] ")  # pylint: disable=undefined-variable
         if choice.lower() == 'n':
             return True
     return False
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     CONFIRM_STEPS = popts.confirm_steps
     DRY_RUN = popts.dry_run
 
-    choice = raw_input('Are you sure? (y/N) [n] ')
+    choice = raw_input('Are you sure? (y/N) [n] ')  # pylint: disable=undefined-variable
     if choice.lower() != 'y':
         sys.exit(1)
 

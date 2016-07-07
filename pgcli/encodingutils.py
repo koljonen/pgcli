@@ -9,7 +9,7 @@ def unicode2utf8(arg):
     In Python 3 the args are expected as unicode.
     """
 
-    if PY2 and isinstance(arg, unicode):
+    if PY2 and isinstance(arg, unicode):  # pylint: disable=undefined-variable
         return arg.encode('utf-8')
     return arg
 

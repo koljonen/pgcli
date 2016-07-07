@@ -59,7 +59,7 @@ def pgcli_line_magic(line):
         return
 
 
-    ipython = get_ipython()
+    ipython = get_ipython()  # pylint: disable=undefined-variable
     return ipython.run_cell_magic('sql', line, q.query)
 
 
