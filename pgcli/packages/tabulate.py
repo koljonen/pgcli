@@ -1054,7 +1054,7 @@ def _main():
             _pprint_file(f, headers=headers, tablefmt=tablefmt, sep=sep)
         else:
             with open(f) as fobj:
-                _pprint_file(fobj)
+                _pprint_file(fobj, headers, tablefmt, sep)
 
 
 def _pprint_file(fobject, headers, tablefmt, sep):
