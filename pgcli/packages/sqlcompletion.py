@@ -235,18 +235,7 @@ def suggest_special(text):
 
 
 def suggest_based_on_last_token(token, stmt):
-
-    if isinstance(token, string_types):
-        token_v = token.lower()
-    elif isinstance(token, Comparison):
-        # If 'token' is a Comparison type such as
-        # 'select * FROM abc a JOIN def d ON a.id = d.'. Then calling
-        # token.value on the comparison type will only return the lhs of the
-        # comparison. In this case a.id. So we need to do token.tokens to get
-        # both sides of the comparison and pick the last token out of that
-        # list.
-        token_v = token.tokens[-1].value.lower()
-    elif isinstance(token, Where):
+    if isinstance(token, Where):
         # sqlparse groups all tokens from the where clause into a single token
         # list. This means that token.value may be something like
         # 'where foo > 5 and '. We need to look "inside" token.tokens to handle
@@ -268,174 +257,167 @@ def suggest_based_on_last_token(token, stmt):
             return suggest_based_on_last_token('type', stmt)
         else:
             return (Keyword(),)
-    else:
-        token_v = token.value.lower()
 
+    token_v = _token_value(token)
+    is_join = token_v.endswith('join') and token.is_keyword
+    schema = stmt.get_identifier_schema()
+    # maybe_schemas is used to suggest schemas only when user didn't enter one
+    maybe_schemas = tuple() if schema else (Schema(),)
+    token_mapping = {
+        'set': lambda: (Column(tables=stmt.get_tables()),),
+        'by': lambda: (Column(tables=stmt.get_tables()),),
+        'distinct': lambda: (Column(tables=stmt.get_tables()),),
+        'select': lambda: _suggest_in_column_list(stmt),
+        'where': lambda: _suggest_in_column_list(stmt),
+        'having': lambda: _suggest_in_column_list(stmt),
+        'table': lambda: (Table(schema),) + maybe_schemas,
+        'view': lambda: (View(schema),) + maybe_schemas,
+        'function': lambda: (Function(schema),) + maybe_schemas,
+        'copy': lambda: (Table(schema), View(schema)) + maybe_schemas,
+        'update': lambda: (Table(schema), View(schema)) + maybe_schemas,
+        'into': lambda: (Table(schema), View(schema)) + maybe_schemas,
+        'describe': lambda: (Table(schema), View(schema)) + maybe_schemas,
+        'truncate': lambda: (Table(schema),) + maybe_schemas,
+        'column': lambda: (Column(tables=stmt.get_tables()),),
+        'on': lambda: _suggest_after_on(stmt),
+        'schema': lambda: (Schema(),),
+        'c': lambda: (Database(),),
+        'use': lambda: (Database(),),
+        'database': lambda: (Database(),),
+        'template': lambda: (Database(),),
+        'type': lambda: (Datatype(schema), Table(schema)) + maybe_schemas,
+        '::': lambda: (Datatype(schema), Table(schema)) + maybe_schemas,
+    }
     if not token:
         return (Keyword(), Special())
+    elif token_v in token_mapping:
+        return token_mapping[token_v]()
     elif token_v.endswith('('):
-        p = sqlparse.parse(stmt.text_before_cursor)[0]
-
-        if p.tokens and isinstance(p.tokens[-1], Where):
-            # Four possibilities:
-            #  1 - Parenthesized clause like "WHERE foo AND ("
-            #        Suggest columns/functions
-            #  2 - Function call like "WHERE foo("
-            #        Suggest columns/functions
-            #  3 - Subquery expression like "WHERE EXISTS ("
-            #        Suggest keywords, in order to do a subquery
-            #  4 - Subquery OR array comparison like "WHERE foo = ANY("
-            #        Suggest columns/functions AND keywords. (If we wanted to be
-            #        really fancy, we could suggest only array-typed columns)
-
-            column_suggestions = suggest_based_on_last_token('where', stmt)
-
-            # Check for a subquery expression (cases 3 & 4)
-            where = p.tokens[-1]
-            prev_tok = where.token_prev(len(where.tokens) - 1)
-
-            if isinstance(prev_tok, Comparison):
-                # e.g. "SELECT foo FROM bar WHERE foo = ANY("
-                prev_tok = prev_tok.tokens[-1]
-
-            prev_tok = prev_tok.value.lower()
-            if prev_tok == 'exists':
-                return (Keyword(),)
-            else:
-                return column_suggestions
-
-        # Get the token before the parens
-        prev_tok = p.token_prev(len(p.tokens) - 1)
-
-        if (prev_tok and prev_tok.value
-          and prev_tok.value.lower().split(' ')[-1] == 'using'):
-            # tbl1 INNER JOIN tbl2 USING (col1, col2)
-            tables = stmt.get_tables('before')
-
-            # suggest columns that are present in more than one table
-            return (Column(tables=tables, require_last_table=True),)
-
-        elif p.token_first().value.lower() == 'select':
-            # If the lparen is preceeded by a space chances are we're about to
-            # do a sub-select.
-            if last_word(stmt.text_before_cursor,
-                         'all_punctuations').startswith('('):
-                return (Keyword(),)
-        prev_prev_tok = p.token_prev(p.token_index(prev_tok))
-        if prev_prev_tok and prev_prev_tok.normalized == 'INTO':
-            return (Column(tables=stmt.get_tables('insert')),)
-        # We're probably in a function argument list
-        return (Column(tables=extract_tables(stmt.full_text)),)
-    elif token_v in ('set', 'by', 'distinct'):
-        return (Column(tables=stmt.get_tables()),)
-    elif token_v in ('select', 'where', 'having'):
-        # Check for a table alias or schema qualification
-        parent = (stmt.identifier and stmt.identifier.get_parent_name()) or []
-        tables = stmt.get_tables()
-        if parent:
-            tables = tuple(t for t in tables if identifies(parent, t))
-            return (Column(tables=tables),
-                    Table(schema=parent),
-                    View(schema=parent),
-                    Function(schema=parent),)
-        else:
-            return (Column(tables=tables),
-                    Function(schema=None),
-                    Keyword(),)
-
-    elif (token_v.endswith('join') and token.is_keyword) or (token_v in
-            ('copy', 'from', 'update', 'into', 'describe', 'truncate')):
-
-        schema = stmt.get_identifier_schema()
-        tables = extract_tables(stmt.text_before_cursor)
-        is_join = token_v.endswith('join') and token.is_keyword
-
-        # Suggest tables from either the currently-selected schema or the
-        # public schema if no schema has been specified
-        suggest = []
-
-        if not schema:
-            # Suggest schemas
-            suggest.insert(0, Schema())
-
-        # Suggest set-returning functions in the FROM clause
-        if token_v == 'from' or is_join:
-            suggest.append(FromClauseItem(schema=schema, tables=tables))
-        elif token_v == 'truncate':
-            suggest.append(Table(schema))
-        else:
-            suggest.extend((Table(schema), View(schema)))
-
-        if is_join and _allow_join(stmt.parsed):
-            tables = stmt.get_tables('before')
-            suggest.append(Join(tables=tables, schema=schema))
-
-        return tuple(suggest)
-
-    elif token_v in ('table', 'view', 'function'):
-        # E.g. 'DROP FUNCTION <funcname>', 'ALTER TABLE <tablname>'
-        rel_type = {'table': Table, 'view': View, 'function': Function}[token_v]
-        schema = stmt.get_identifier_schema()
-        if schema:
-            return (rel_type(schema=schema),)
-        else:
-            return (Schema(), rel_type(schema=schema))
-
-    elif token_v == 'column':
-        # E.g. 'ALTER TABLE foo ALTER COLUMN bar
-        return (Column(tables=stmt.get_tables()),)
-
-    elif token_v == 'on':
+        return _suggest_after_parenthesis(stmt)
+    elif is_join and _allow_join(stmt.parsed):
         tables = stmt.get_tables('before')
-        parent = (stmt.identifier and stmt.identifier.get_parent_name()) or None
-        if parent:
-            # "ON parent.<suggestion>"
-            # parent can be either a schema name or table alias
-            filteredtables = tuple(t for t in tables if identifies(parent, t))
-            sugs = [Column(tables=filteredtables),
-                    Table(schema=parent),
-                    View(schema=parent),
-                    Function(schema=parent)]
-            if filteredtables and _allow_join_condition(stmt.parsed):
-                sugs.append(JoinCondition(tables=tables,
-                                          parent=filteredtables[-1]))
-            return tuple(sugs)
-        else:
-            # ON <suggestion>
-            # Use table alias if there is one, otherwise the table name
-            aliases = tuple(t.ref for t in tables)
-            if _allow_join_condition(stmt.parsed):
-                return (Alias(aliases=aliases), JoinCondition(
-                    tables=tables, parent=None))
-            else:
-                return (Alias(aliases=aliases),)
-
-    elif token_v in ('c', 'use', 'database', 'template'):
-        # "\c <db", "use <db>", "DROP DATABASE <db>",
-        # "CREATE DATABASE <newdb> WITH TEMPLATE <db>"
-        return (Database(),)
-    elif token_v == 'schema':
-        # DROP SCHEMA schema_name
-        return (Schema(),)
+        return (FromClauseItem(schema=schema, tables=tables),
+            Join(tables=tables, schema=schema)) + maybe_schemas
+    elif is_join or token_v == 'from':
+        tables = stmt.get_tables('before')
+        return (FromClauseItem(schema=schema, tables=tables),) + maybe_schemas
     elif token_v.endswith(',') or token_v in ('=', 'and', 'or'):
         prev_keyword = stmt.reduce_to_prev_keyword()
-        if prev_keyword:
-            return suggest_based_on_last_token(prev_keyword, stmt)
-        else:
-            return ()
-    elif token_v in ('type', '::'):
-        #   ALTER TABLE foo SET DATA TYPE bar
-        #   SELECT foo::bar
-        # Note that tables are a form of composite type in postgresql, so
-        # they're suggested here as well
-        schema = stmt.get_identifier_schema()
-        suggestions = [Datatype(schema=schema),
-                       Table(schema=schema)]
-        if not schema:
-            suggestions.append(Schema())
-        return tuple(suggestions)
+        suggest_bolt = suggest_based_on_last_token
+        return suggest_bolt(prev_keyword, stmt) if prev_keyword else ()
     else:
         return (Keyword(),)
+
+
+def _suggest_after_on(stmt):
+    tables = stmt.get_tables('before')
+    parent = (stmt.identifier and stmt.identifier.get_parent_name()) or None
+    if parent:
+        # "ON parent.<suggestion>"
+        # parent can be either a schema name or table alias
+        filteredtables = tuple(t for t in tables if identifies(parent, t))
+        sugs = [Column(tables=filteredtables),
+                Table(schema=parent),
+                View(schema=parent),
+                Function(schema=parent)]
+        if filteredtables and _allow_join_condition(stmt.parsed):
+            sugs.append(JoinCondition(tables=tables,
+                                      parent=filteredtables[-1]))
+        return tuple(sugs)
+    else:
+        # ON <suggestion>
+        # Use table alias if there is one, otherwise the table name
+        aliases = tuple(t.ref for t in tables)
+        if _allow_join_condition(stmt.parsed):
+            return (Alias(aliases=aliases), JoinCondition(
+                tables=tables, parent=None))
+        else:
+            return (Alias(aliases=aliases),)
+
+
+def _suggest_in_column_list(stmt):
+    # Check for a table alias or schema qualification
+    parent = (stmt.identifier and stmt.identifier.get_parent_name()) or []
+    tables = stmt.get_tables()
+    if parent:
+        tables = tuple(t for t in tables if identifies(parent, t))
+        return (Column(tables=tables),
+                Table(schema=parent),
+                View(schema=parent),
+                Function(schema=parent),)
+    else:
+        return (Column(tables=tables),
+                Function(schema=None),
+                Keyword(),)
+
+
+def _suggest_after_parenthesis(stmt):
+    p = sqlparse.parse(stmt.text_before_cursor)[0]
+    if p.tokens and isinstance(p.tokens[-1], Where):
+        # Four possibilities:
+        #  1 - Parenthesized clause like "WHERE foo AND ("
+        #        Suggest columns/functions
+        #  2 - Function call like "WHERE foo("
+        #        Suggest columns/functions
+        #  3 - Subquery expression like "WHERE EXISTS ("
+        #        Suggest keywords, in order to do a subquery
+        #  4 - Subquery OR array comparison like "WHERE foo = ANY("
+        #        Suggest columns/functions AND keywords. (If we wanted to be
+        #        really fancy, we could suggest only array-typed columns)
+
+        column_suggestions = suggest_based_on_last_token('where', stmt)
+
+        # Check for a subquery expression (cases 3 & 4)
+        where = p.tokens[-1]
+        prev_tok = where.token_prev(len(where.tokens) - 1)
+
+        if isinstance(prev_tok, Comparison):
+            # e.g. "SELECT foo FROM bar WHERE foo = ANY("
+            prev_tok = prev_tok.tokens[-1]
+
+        prev_tok = prev_tok.value.lower()
+        if prev_tok == 'exists':
+            return (Keyword(),)
+        else:
+            return column_suggestions
+
+    # Get the token before the parens
+    prev_tok = p.token_prev(len(p.tokens) - 1)
+
+    if (prev_tok and prev_tok.value
+      and prev_tok.value.lower().split(' ')[-1] == 'using'):
+        # tbl1 INNER JOIN tbl2 USING (col1, col2)
+        tables = stmt.get_tables('before')
+
+        # suggest columns that are present in more than one table
+        return (Column(tables=tables, require_last_table=True),)
+
+    elif p.token_first().value.lower() == 'select':
+        # If the lparen is preceeded by a space chances are we're about to
+        # do a sub-select.
+        if last_word(stmt.text_before_cursor,
+                     'all_punctuations').startswith('('):
+            return (Keyword(),)
+    prev_prev_tok = p.token_prev(p.token_index(prev_tok))
+    if prev_prev_tok and prev_prev_tok.normalized == 'INTO':
+        return (Column(tables=stmt.get_tables('insert')),)
+    # We're probably in a function argument list
+    return (Column(tables=extract_tables(stmt.full_text)),)
+
+
+def _token_value(token):
+    if isinstance(token, string_types):
+        return token.lower()
+    elif isinstance(token, Comparison):
+        # If 'token' is a Comparison type such as
+        # 'select * FROM abc a JOIN def d ON a.id = d.'. Then calling
+        # token.value on the comparison type will only return the lhs of the
+        # comparison. In this case a.id. So we need to do token.tokens to get
+        # both sides of the comparison and pick the last token out of that
+        # list.
+        return token.tokens[-1].value.lower()
+    else:
+        return token.value.lower()
 
 
 def identifies(name, tbl):
