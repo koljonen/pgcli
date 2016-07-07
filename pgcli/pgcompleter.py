@@ -673,8 +673,8 @@ class PGCompleter(Completer):
                 relname = self.escape_name(tbl.name)
                 schema = self.escape_name(schema)
                 if tbl.is_function:
-                # Return column names from a set-returning function
-                # Get an array of FunctionMetadata objects
+                    # Return column names from a set-returning function
+                    # Get an array of FunctionMetadata objects
                     functions = meta['functions'].get(schema, {}).get(relname)
                     for func in (functions or []):
                         # func is a FunctionMetadata object

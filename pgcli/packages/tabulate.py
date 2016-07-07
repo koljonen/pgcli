@@ -584,8 +584,8 @@ def _normalize_tabular_data(tabular_data, headers):
         rows = list(tabular_data)
 
         if (headers == "keys" and
-            hasattr(tabular_data, "dtype") and
-            getattr(tabular_data.dtype, "names")):
+          hasattr(tabular_data, "dtype") and
+          getattr(tabular_data.dtype, "names")):
             # numpy record array
             headers = tabular_data.dtype.names
         elif (headers == "keys"
@@ -639,10 +639,10 @@ def _normalize_tabular_data(tabular_data, headers):
 
     # pad with empty headers for initial columns if necessary
     if headers and len(rows) > 0:
-       nhs = len(headers)
-       ncols = len(rows[0])
-       if nhs < ncols:
-           headers = [""]*(ncols - nhs) + headers
+        nhs = len(headers)
+        ncols = len(rows[0])
+        if nhs < ncols:
+            headers = [""]*(ncols - nhs) + headers
 
     return rows, headers
 

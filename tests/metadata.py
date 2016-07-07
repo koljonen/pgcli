@@ -19,8 +19,8 @@ schema, table, view, function, column, keyword, datatype, alias, name_join,\
     'keyword', 'datatype', 'table alias', 'name join', 'fk join', 'join')]
 
 def wildcard_expansion(cols, pos=-1):
-        return Completion(cols, start_position=pos, display_meta='columns',
-            display = '*')
+    return Completion(cols, start_position=pos, display_meta='columns',
+        display = '*')
 
 class MetaData(object):
     def __init__(self, metadata):
