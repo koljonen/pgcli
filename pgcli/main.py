@@ -321,7 +321,8 @@ class PGCli(object):
 
         self.pgexecute = pgexecute
 
-    def handle_editor_command(self, cli, document):
+    @staticmethod
+    def handle_editor_command(cli, document):
         """
         Editor command is any query that is prefixed or suffixed
         by a '\e'. The reason for a while loop is because a user

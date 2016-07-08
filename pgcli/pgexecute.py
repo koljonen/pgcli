@@ -168,7 +168,8 @@ class PGExecute(object):
         register_json_typecasters(self.conn, self._json_typecaster)
         register_hstore_typecaster(self.conn)
 
-    def _select_one(self, cur, sql):
+    @staticmethod
+    def _select_one(cur, sql):
         """
         Helper method to run a select and retrieve a single field value
         :param cur: cursor

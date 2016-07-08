@@ -79,7 +79,8 @@ class PGCompleter(Completer):
 
         return name
 
-    def unescape_name(self, name):
+    @staticmethod
+    def unescape_name(name):
         """ Unquote a string."""
         if name and name[0] == '"' and name[-1] == '"':
             name = name[1:-1]
@@ -600,7 +601,8 @@ class PGCompleter(Completer):
         return self.find_matches(word_before_cursor, self.keywords,
                                  mode='strict', meta='keyword')
 
-    def get_path_matches(self, _, word_before_cursor):
+    @staticmethod
+    def get_path_matches(_, word_before_cursor):
         completer = PathCompleter(expanduser=True)
         document = Document(text=word_before_cursor,
                             cursor_position=len(word_before_cursor))
