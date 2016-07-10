@@ -21,7 +21,7 @@ def cursor(connection):
 
 
 @pytest.fixture
-def executor(connection):
+def executor(connection):  # pylint: disable=unused-argument
     return pgcli.pgexecute.PGExecute(database='_test_db', user=POSTGRES_USER,
             host=POSTGRES_HOST, password=None, port=None, dsn=None)
 

@@ -53,7 +53,7 @@ def test_refresh_called_twice(refresher):
     pgexecute = Mock()
     special = Mock()
 
-    def dummy_bg_refresh(*args):
+    def dummy_bg_refresh(*args):  # pylint: disable=unused-argument
         time.sleep(3)  # seconds
 
     refresher._bg_refresh = dummy_bg_refresh
