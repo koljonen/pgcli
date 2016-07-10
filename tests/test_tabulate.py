@@ -12,3 +12,11 @@ def test_dont_strip_leading_whitespace():
         |---------|
         |     abc |
         +---------+ ''').strip()
+
+def test_no_headers():
+    data = ['abc']
+    tbl, _ = tabulate(data, tablefmt='psql')
+    assert tbl == dedent('''
+        +---+---+---+
+        | a | b | c |
+        +---+---+---+''').strip()
