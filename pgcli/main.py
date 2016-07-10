@@ -723,7 +723,7 @@ def cli(database, user, host, port, prompt_passwd, never_prompt, dbname,
         try:
             cfg = load_config(config_full_path)
             dsn_config = cfg['alias_dsn'][dsn]
-        except:
+        except KeyError:
             click.secho('Invalid DSNs found in the config file. '\
                 'Please check the "[alias_dsn]" section in pgclirc.',
                  err=True, fg='red')
