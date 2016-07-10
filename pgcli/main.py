@@ -469,7 +469,8 @@ class PGCli(object):
         def prompt_tokens(_):
             return [(Token.Prompt, '%s> ' % self.pgexecute.dbname)]
 
-        def get_continuation_tokens(cli, width):
+        def get_continuation_tokens(  # pylint: disable=unused-argument
+                                    cli, width):
             return [(Token.Continuation, '.' * (width - 1) + ' ')]
 
         get_toolbar_tokens = create_toolbar_tokens_func(

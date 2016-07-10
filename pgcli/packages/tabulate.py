@@ -111,7 +111,8 @@ def _pipe_line_with_colons(colwidths, colaligns):
     return "|" + "|".join(segments) + "|"
 
 
-def _mediawiki_row_with_attrs(separator, cell_values, colwidths, colaligns):
+def _mediawiki_row_with_attrs(  # pylint: disable=unused-argument
+                              separator, cell_values, colwidths, colaligns):
     alignment = { "left":    '',
                   "right":   'align="right"| ',
                   "center":  'align="center"| ',
@@ -124,7 +125,8 @@ def _mediawiki_row_with_attrs(separator, cell_values, colwidths, colaligns):
     return (separator + colsep.join(values_with_attrs)).rstrip()
 
 
-def _html_row_with_attrs(celltag, cell_values, colwidths, colaligns):
+def _html_row_with_attrs(  # pylint: disable=unused-argument
+                         celltag, cell_values, colwidths, colaligns):
     alignment = { "left":    '',
                   "right":   ' style="text-align: right;"',
                   "center":  ' style="text-align: center;"',
@@ -134,7 +136,8 @@ def _html_row_with_attrs(celltag, cell_values, colwidths, colaligns):
     return "<tr>" + "".join(values_with_attrs).rstrip() + "</tr>"
 
 
-def _latex_line_begin_tabular(colwidths, colaligns, booktabs=False):
+def _latex_line_begin_tabular(  # pylint: disable=unused-argument
+                              colwidths, colaligns, booktabs=False):
     alignment = { "left": "l", "right": "r", "center": "c", "decimal": "r" }
     tabular_columns_fmt = "".join([alignment.get(a, "l") for a in colaligns])
     return "\n".join(["\\begin{tabular}{" + tabular_columns_fmt + "}",
@@ -146,7 +149,8 @@ LATEX_ESCAPE_RULES = {r"&": r"\&", r"%": r"\%", r"$": r"\$", r"#": r"\#",
                       r"<": r"\ensuremath{<}", r">": r"\ensuremath{>}"}
 
 
-def _latex_row(cell_values, colwidths, colaligns):
+def _latex_row(  # pylint: disable=unused-argument
+               cell_values, colwidths, colaligns):
     def escape_char(c):
         return LATEX_ESCAPE_RULES.get(c, c)
     escaped_values = ["".join(map(escape_char, cell)) for cell in cell_values]

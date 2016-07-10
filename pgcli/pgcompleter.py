@@ -329,7 +329,8 @@ class PGCompleter(Completer):
     def case(self, word):
         return self.casing.get(word, word)
 
-    def get_completions(self, document, complete_event, smart_completion=None):
+    def get_completions(  # pylint: disable=unused-argument
+                    self, document, complete_event, smart_completion=None):
         word_before_cursor = document.get_word_before_cursor(WORD=True)
 
         if smart_completion is None:

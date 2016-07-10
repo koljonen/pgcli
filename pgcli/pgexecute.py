@@ -34,7 +34,7 @@ def register_date_typecasters(connection):
     Casts date and timestamp values to string, resolves issues with out of
     range dates (e.g. BC) which psycopg2 can't handle
     """
-    def cast_date(value, cursor):
+    def cast_date(value, cursor):  # pylint: disable=unused-argument
         return value
     cursor = connection.cursor()
     cursor.execute('SELECT NULL::date')
