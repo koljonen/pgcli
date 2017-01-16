@@ -157,6 +157,7 @@ class PGCli(object):
             'generate_aliases': c['main'].as_bool('generate_aliases'),
             'asterisk_column_order': c['main']['asterisk_column_order'],
             'qualify_columns': c['main']['qualify_columns'],
+            'case_column_headers': c['main'].as_bool('case_column_headers'),
             'single_connection': single_connection,
             'keyword_casing': keyword_casing,
         }
@@ -595,13 +596,18 @@ class PGCli(object):
                 max_width = None
 
             expanded = self.pgspecial.expanded_output or self.expanded_output
+            case_function = (
+                self.completer.case if self.settings['case_column_headers']
+                else lambda x: x
+            )
             settings = {
                 'table_format': self.table_format,
                 'dcmlfmt': self.decimal_format,
                 'floatfmt': self.float_format,
                 'missingval': self.null_string,
                 'expanded': expanded,
-                'max_width': max_width
+                'max_width': max_width,
+                'case_function': case_function
             }
             formatted = format_output(title, cur, headers, status, settings)
 
@@ -817,10 +823,11 @@ def format_output(title, cur, headers, status, settings):
     floatfmt = settings['floatfmt']
     expanded = settings.get('expanded', False)
     max_width = settings.get('max_width', None)
+    case_function = settings.pop('case_function', lambda x: x)
     if title:  # Only print the title if it's not None.
         output.append(title)
     if cur:
-        headers = [utf8tounicode(x) for x in headers]
+        headers = [case_function(utf8tounicode(x)) for x in headers]
         if expanded and headers:
             output.append(expanded_table(cur, headers, missingval))
         else:
