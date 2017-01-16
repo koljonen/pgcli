@@ -595,9 +595,15 @@ class PGCli(object):
                 max_width = None
 
             expanded = self.pgspecial.expanded_output or self.expanded_output
-            formatted = format_output(
-                title, cur, headers, status, self.table_format, self.decimal_format,
-                self.float_format, self.null_string, expanded, max_width)
+            settings = {
+                'table_format': self.table_format,
+                'dcmlfmt': self.decimal_format,
+                'floatfmt': self.float_format,
+                'missingval': self.null_string,
+                'expanded': expanded,
+                'max_width': max_width
+            }
+            formatted = format_output(title, cur, headers, status, settings)
 
             output.extend(formatted)
             total = time() - start
@@ -803,9 +809,14 @@ def obfuscate_process_password():
     setproctitle.setproctitle(process_title)
 
 
-def format_output(title, cur, headers, status, table_format, dcmlfmt, floatfmt,
-                  missingval='<null>', expanded=False, max_width=None):
+def format_output(title, cur, headers, status, settings):
     output = []
+    missingval = settings.get('missingval', '<null>')
+    table_format = settings['table_format']
+    dcmlfmt = settings['dcmlfmt']
+    floatfmt = settings['floatfmt']
+    expanded = settings.get('expanded', False)
+    max_width = settings.get('max_width', None)
     if title:  # Only print the title if it's not None.
         output.append(title)
     if cur:
