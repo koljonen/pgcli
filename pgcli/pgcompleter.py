@@ -17,7 +17,6 @@ from .packages.parseutils.tables import TableReference
 from .packages.pgliterals.main import get_literals
 from .packages.prioritization import PrevalenceCounter
 from .config import load_config, config_location
-
 try:
     from collections import OrderedDict
 except ImportError:
