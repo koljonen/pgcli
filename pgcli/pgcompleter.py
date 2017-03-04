@@ -28,7 +28,6 @@ _logger = logging.getLogger(__name__)
 NamedQueries.instance = NamedQueries.from_config(
     load_config(config_location() + 'config'))
 
-
 Match = namedtuple('Match', ['completion', 'priority'])
 
 _Candidate = namedtuple('Candidate', ['completion', 'priority', 'meta', 'synonyms'])
