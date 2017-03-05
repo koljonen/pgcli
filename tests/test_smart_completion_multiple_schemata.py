@@ -73,11 +73,6 @@ parametrize = pytest.mark.parametrize
 qual = ['if_more_than_one_table', 'always']
 no_qual = ['if_more_than_one_table', 'never']
 
-@pytest.fixture
-def complete_event():
-    from mock import Mock
-    return Mock()
-
 
 @parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 @parametrize('table', [
