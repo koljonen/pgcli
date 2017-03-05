@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import pytest
 import itertools
 from metadata import (MetaData, alias, name_join, fk_join, join,
     schema, table, function, wildcard_expansion, column,
