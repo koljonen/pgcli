@@ -70,7 +70,8 @@ casing = ('SELECT', 'Orders', 'User_Emails', 'CUSTOM', 'Func1', 'Entries',
 
 completers = testdata.get_completers(casing)
 parametrize = pytest.mark.parametrize
-
+qual = ['if_more_than_one_table', 'always']
+no_qual = ['if_more_than_one_table', 'never']
 
 @pytest.fixture
 def complete_event():
@@ -78,11 +79,7 @@ def complete_event():
     return Mock()
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 @parametrize('table', [
     'users',
     '"users"',
@@ -101,11 +98,7 @@ def test_suggested_column_names_from_shadowed_visible_table(
         )
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 @parametrize('text', [
     'SELECT  from custom.users',
     'WITH users as (SELECT 1 AS foo) SELECT  from custom.users',
@@ -120,11 +113,7 @@ def test_suggested_column_names_from_qualified_shadowed_table(completer, text):
         )
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 @parametrize('text', [
     'WITH users as (SELECT 1 AS foo) SELECT  from users',
     ])
@@ -167,11 +156,7 @@ def test_suggested_joins(completer, query, tbl):
         ] + testdata.functions())
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 def test_suggested_column_names_from_schema_qualifed_table(completer):
     text = 'SELECT  from custom.products'
     position = len('SELECT ')
@@ -182,11 +167,7 @@ def test_suggested_column_names_from_schema_qualifed_table(completer):
     )
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 def test_suggested_column_names_in_function(completer):
     text = 'SELECT MAX( from custom.products'
     position = len('SELECT MAX(')
@@ -242,11 +223,7 @@ def test_suggested_column_names_with_qualified_alias(completer):
     assert set(result) == set(testdata.columns('products', 'custom'))
 
 
-@parametrize(
-    'completer', completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))
 def test_suggested_multiple_column_names(completer):
     text = 'SELECT id,  from custom.products'
     position = len('SELECT id, ')
@@ -330,12 +307,7 @@ def test_suggest_columns_from_aliased_set_returning_function(completer):
         testdata.columns('set_returning_func', 'custom', 'functions'))
 
 
-@parametrize(
-    'completer',
-    completers(
-        filtr=True, casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer',completers(filtr=True, casing=False, qualify=no_qual))
 @parametrize('text', [
     'SELECT * FROM custom.set_returning_func()',
     'SELECT * FROM Custom.set_returning_func()',
@@ -405,12 +377,7 @@ def test_wildcard_column_expansion_with_table_qualifier(completer):
     assert expected == completions
 
 
-@parametrize(
-    'completer',
-    completers(
-        filtr=True, casing=False, qualify=['if_more_than_one_table', 'always']
-    )
-)
+@parametrize('completer',completers(filtr=True, casing=False, qualify=qual))
 def test_wildcard_column_expansion_with_two_tables(completer):
     text = 'SELECT * FROM public."select" JOIN custom.users ON true'
     position = len('SELECT *')
@@ -581,12 +548,7 @@ def test_function_alias_search_with_aliases(completer):
     assert result[0] == function('enter_entry()', -2)
 
 
-@parametrize(
-    'completer',
-    completers(
-        filtr=True, casing=True, qualify=['if_more_than_one_table', 'never']
-    )
-)
+@parametrize('completer',completers(filtr=True, casing=True, qualify=no_qual))
 def test_column_alias_search(completer):
     text = 'SELECT et FROM blog.Entries E'
     position = len('SELECT et')

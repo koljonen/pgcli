@@ -56,6 +56,8 @@ cased_aliased_rels = [table(t) for t in ('Users U', '"Users" U', 'Orders O',
 
 completers = testdata.get_completers(casing)
 parametrize = pytest.mark.parametrize
+qual = ['if_more_than_one_table', 'always']
+no_qual = ['if_more_than_one_table', 'never']
 
 
 @parametrize('completer', completers())
@@ -112,11 +114,7 @@ def test_user_function_name_completion_matches_anywhere(completer):
         function('custom_func2()', -2)])
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggested_column_names_from_visible_table(completer):
     text = 'SELECT  from users'
     position = len('SELECT ')
@@ -127,11 +125,7 @@ def test_suggested_column_names_from_visible_table(completer):
     )
 
 
-@parametrize(
-    'completer', completers(
-        casing=True, qualify=['if_more_than_one_table', 'never']
-    )
-)
+@parametrize('completer', completers(casing=True, qualify=no_qual))
 def test_suggested_cased_column_names(completer):
     text = 'SELECT  from users'
     position = len('SELECT ')
@@ -140,9 +134,7 @@ def test_suggested_cased_column_names(completer):
         + testdata.builtin_functions() + testdata.keywords())
 
 
-@parametrize(
-    'completer', completers(casing=False, qualify=['if_more_than_one_table'])
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 @parametrize('text', [
     'SELECT  from users',
     'INSERT INTO Orders SELECT  from users',
@@ -155,11 +147,7 @@ def test_suggested_auto_qualified_column_names(text, completer):
         + testdata.builtin_functions() + testdata.keywords())
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['always', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=qual))
 @parametrize('text', [
     'SELECT  from users U NATURAL JOIN "Users"',
     'INSERT INTO Orders SELECT  from users U NATURAL JOIN "Users"',
@@ -196,11 +184,7 @@ def test_suggested_cased_always_qualified_column_names(
         + testdata.builtin_functions() + testdata.keywords())
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggested_column_names_in_function(completer):
     text = 'SELECT MAX( from users'
     position = len('SELECT MAX(')
@@ -224,11 +208,7 @@ def test_suggested_column_names_with_alias(completer):
     assert result == set(testdata.columns('users'))
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggested_multiple_column_names(completer):
     text = 'SELECT id,  from users u'
     position = len('SELECT id, ')
@@ -559,11 +539,7 @@ def test_table_names_after_from(completer, text):
     ]
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_auto_escaped_col_names(completer):
     text = 'SELECT  from "select"'
     position = len('SELECT ')
@@ -605,11 +581,7 @@ def test_suggest_columns_from_escaped_table_alias(completer):
     assert result == set(testdata.columns('select'))
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggest_columns_from_set_returning_function(completer):
     text = 'select  from set_returning_func()'
     position = len('select ')
@@ -676,11 +648,7 @@ def test_learn_table_names(completer):
     assert completions.index(users) < completions.index(orders)
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_columns_before_keywords(completer):
     text = 'SELECT * FROM orders WHERE s'
     completions = get_result(completer, text)
@@ -691,11 +659,7 @@ def test_columns_before_keywords(completer):
     assert completions.index(col) < completions.index(kw)
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 @parametrize('text', [
     'SELECT * FROM users',
     'INSERT INTO users SELECT * FROM users u',
@@ -750,11 +714,7 @@ def test_wildcard_column_expansion_with_table_qualifier(completer, text, expecte
     assert expected == completions
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['always', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=qual))
 def test_wildcard_column_expansion_with_two_tables(completer):
     text = 'SELECT * FROM "select" JOIN users u ON true'
     position = len('SELECT *')
@@ -893,11 +853,7 @@ def test_suggest_cte_names(completer):
     assert expected <= result
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggest_columns_from_cte(completer):
     text = 'WITH cte AS (SELECT foo, bar FROM baz) SELECT  FROM cte'
     position = len('WITH cte AS (SELECT foo, bar FROM baz) SELECT ')
@@ -913,11 +869,7 @@ def test_suggest_columns_from_cte(completer):
     assert set(expected) == result
 
 
-@parametrize(
-    'completer', completers(
-        casing=False, qualify=['never', 'if_more_than_one_table']
-    )
-)
+@parametrize('completer', completers(casing=False, qualify=no_qual))
 @parametrize('text', [
     'WITH cte AS (SELECT foo FROM bar) SELECT * FROM cte WHERE cte.',
     'WITH cte AS (SELECT foo FROM bar) SELECT * FROM cte c WHERE c.',
