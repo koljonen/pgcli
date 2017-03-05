@@ -67,7 +67,7 @@ class MetaData(object):
     @property
     def completer(self):
         return self.get_completer()
-        
+
     def get_completers(self, casing):
         '''
         Returns a function taking three bools `casing`, `filtr`, `alias` and
