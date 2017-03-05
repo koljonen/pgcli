@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 import pytest
 from metadata import (MetaData, alias, name_join, fk_join, join, keyword,
-    schema, table, view, function, column, wildcard_expansion)
-from prompt_toolkit.document import Document
+    schema, table, view, function, column, wildcard_expansion,
+    get_result, result_set)
 from prompt_toolkit.completion import Completion
-from mock import Mock
+
 
 metadata = {
     'tables': {
@@ -57,15 +57,6 @@ cased_aliased_rels = [table(t) for t in ('Users U', '"Users" U', 'Orders O',
 completers = testdata.get_completers(casing)
 parametrize = pytest.mark.parametrize
 
-
-def get_result(completer, text, position=None):
-    position = len(text) if position is None else position
-    return completer.get_completions(
-        Document(text=text, cursor_position=position), Mock()
-    )
-
-def result_set(completer, text, position=None):
-    return set(get_result(completer, text, position))
 
 @parametrize('completer', completers())
 def test_empty_string_completion(completer):
