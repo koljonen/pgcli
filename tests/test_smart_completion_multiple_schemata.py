@@ -3,7 +3,7 @@ import pytest
 import itertools
 from metadata import (MetaData, alias, name_join, fk_join, join,
     schema, table, function, wildcard_expansion, column,
-    get_result, result_set)
+    get_result, result_set, qual, no_qual, parametrize)
 
 metadata = {
     'tables': {
@@ -63,15 +63,10 @@ metadata = {
 
 testdata = MetaData(metadata)
 cased_schemas = [schema(x) for x in ('public', 'blog', 'CUSTOM', '"Custom"')]
-
 casing = ('SELECT', 'Orders', 'User_Emails', 'CUSTOM', 'Func1', 'Entries',
           'Tags', 'EntryTags', 'EntAccLog',
           'EntryID', 'EntryTitle', 'EntryText')
-
 completers = testdata.get_completers(casing)
-parametrize = pytest.mark.parametrize
-qual = ['if_more_than_one_table', 'always']
-no_qual = ['if_more_than_one_table', 'never']
 
 
 @parametrize('completer', completers(filtr=True, casing=False, qualify=no_qual))

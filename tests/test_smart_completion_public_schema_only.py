@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import pytest
 from metadata import (MetaData, alias, name_join, fk_join, join, keyword,
     schema, table, view, function, column, wildcard_expansion,
-    get_result, result_set)
+    get_result, result_set, qual, no_qual, parametrize)
 from prompt_toolkit.completion import Completion
 
 
@@ -53,11 +53,7 @@ cased_aliased_rels = [table(t) for t in ('Users U', '"Users" U', 'Orders O',
     '"select" s')] + [view('User_Emails UE')] + [function(f) for f in (
     '_custom_fun() cf', 'Custom_Fun() CF', 'Custom_Func1() CF',
     'custom_func2() cf', 'set_returning_func() srf')]
-
 completers = testdata.get_completers(casing)
-parametrize = pytest.mark.parametrize
-qual = ['if_more_than_one_table', 'always']
-no_qual = ['if_more_than_one_table', 'never']
 
 
 @parametrize('completer', completers())
