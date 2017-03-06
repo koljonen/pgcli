@@ -345,12 +345,13 @@ join_texts = [
 @parametrize('text', join_texts)
 def test_suggested_joins(completer, text):
     result = result_set(completer, text)
-    assert result == set(testdata.schemas() + testdata.tables()
-        + testdata.views() + [
+    assert result == set(
+        testdata.schemas_from_items() + [
         join('"Users" ON "Users".userid = Users.id'),
         join('users users2 ON users2.id = Users.parentid'),
         join('users users2 ON users2.parentid = Users.id'),
-        ] + testdata.functions())
+        ]
+    )
 
 
 @parametrize('completer', completers(casing=True, alias=False))
@@ -385,10 +386,10 @@ def test_aliased_joins(completer, text):
 ])
 def test_suggested_joins_quoted_schema_qualified_table(completer, text):
     result = result_set(completer, text)
-    assert result == set(testdata.schemas() + testdata.tables()
-        + testdata.views() + [
-        join('public.users ON users.id = "Users".userid'),
-    ] + testdata.functions())
+    assert result == set(
+        testdata.schemas_from_items() +
+        [join('public.users ON users.id = "Users".userid')]
+    )
 
 
 @parametrize('completer', completers(casing=False))
@@ -487,8 +488,7 @@ def test_join_using_suggests_columns_after_first_column(completer, text):
 ])
 def test_table_names_after_from(completer, text):
     result = get_result(completer, text)
-    assert set(result) == set(testdata.schemas() + testdata.tables()
-        + testdata.views() + testdata.functions())
+    assert set(result) == set(testdata.schemas_from_items())
     assert [c.text for c in result] == [
         'public',
         'orders',
@@ -530,8 +530,9 @@ def test_allow_leading_double_quote_in_last_word(completer):
 ])
 def test_suggest_datatype(text, completer):
     result = result_set(completer, text)
-    assert result == set(testdata.schemas() + testdata.datatypes() +
-        testdata.tables() + testdata.builtin_datatypes())
+    assert result == set(
+        testdata.schemas() + testdata.types() + testdata.builtin_datatypes()
+    )
 
 
 @parametrize('completer', completers(casing=False))
@@ -728,8 +729,7 @@ def test_suggest_columns_from_quoted_table(completer):
     'SELECT * FROM Orders o CROSS JOIN '])
 def test_schema_or_visible_table_completion(completer, text):
     result = result_set(completer, text)
-    assert result == set(testdata.schemas()
-        + testdata.views() + testdata.tables() + testdata.functions())
+    assert result == set(testdata.schemas_from_items())
 
 
 @parametrize('completer', completers(casing=False, alias=True))

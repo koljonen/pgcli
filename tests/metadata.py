@@ -76,15 +76,27 @@ class MetaData(object):
         return [function(escape(x[0] + '()'), pos)
             for x in self.metadata.get('functions', {}).get(schema, [])]
 
+    def schemas(self, pos=0):
+        schemas = set(sch for schs in self.metadata.values() for sch in schs)
+        return [schema(escape(s), pos=pos) for s in schemas]
+
     def functions_keywords(self, schema='public', pos=0):
         return (
             self.functions(schema, pos) + self.builtin_functions(pos) +
             self.keywords(pos)
         )
 
-    def schemas(self, pos=0):
-        schemas = set(sch for schs in self.metadata.values() for sch in schs)
-        return [schema(escape(s), pos=pos) for s in schemas]
+    def from_items(self, schema='public', pos=0):
+        return (
+            self.functions(schema, pos) + self.views(schema, pos) +
+            self.tables(schema, pos)
+        )
+
+    def schemas_from_items(self, schema='public', pos=0):
+        return self.from_items(schema, pos) + self.schemas(pos)
+
+    def types(self, schema='public', pos=0):
+        return self.datatypes(schema, pos) + self.tables(schema, pos)
 
     @property
     def completer(self):
