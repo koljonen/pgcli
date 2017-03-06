@@ -107,9 +107,7 @@ def test_user_function_name_completion_matches_anywhere(completer):
 @parametrize('completer', completers(casing=False, qualify=no_qual))
 def test_suggested_column_names_from_visible_table(completer):
     result = result_set(completer, 'SELECT  from users', len('SELECT '))
-    assert result == set(testdata.columns('users') + testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
+    assert result == set(testdata.columns('users') + testdata.functions_keywords()
     )
 
 
@@ -129,8 +127,7 @@ def test_suggested_auto_qualified_column_names(text, completer):
     position = text.index('  ') + 1
     cols = [column(c.lower()) for c in cased_users_col_names]
     result = result_set(completer, text, position)
-    assert result == set(testdata.functions() + cols
-        + testdata.builtin_functions() + testdata.keywords())
+    assert result == set(cols + testdata.functions_keywords())
 
 
 @parametrize('completer', completers(casing=False, qualify=qual))
@@ -143,8 +140,7 @@ def test_suggested_auto_qualified_column_names_two_tables(text, completer):
     cols = [column('U.' + c.lower()) for c in cased_users_col_names]
     cols += [column('"Users".' + c.lower()) for c in cased_users2_col_names]
     result = result_set(completer, text, position)
-    assert result == set(testdata.functions() + cols
-        + testdata.builtin_functions() + testdata.keywords())
+    assert result == set(cols + testdata.functions_keywords())
 
 
 @parametrize('completer', completers(casing=True, qualify=['always']))
@@ -197,9 +193,7 @@ def test_suggested_multiple_column_names(completer):
     result = result_set(
         completer, 'SELECT id,  from users u', len('SELECT id, ')
     )
-    assert result == set(testdata.columns('users') + testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
+    assert result == set(testdata.columns('users') + testdata.functions_keywords()
         )
 
 
@@ -514,9 +508,7 @@ def test_table_names_after_from(completer, text):
 def test_auto_escaped_col_names(completer):
     result = result_set(completer, 'SELECT  from "select"', len('SELECT '))
     assert result == set(testdata.columns('select') + [
-        ] + testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
+        ] + testdata.functions_keywords()
     )
 
 
@@ -539,7 +531,7 @@ def test_allow_leading_double_quote_in_last_word(completer):
 def test_suggest_datatype(text, completer):
     result = result_set(completer, text)
     assert result == set(testdata.schemas() + testdata.datatypes() +
-        testdata.tables() + list(testdata.builtin_datatypes()))
+        testdata.tables() + testdata.builtin_datatypes())
 
 
 @parametrize('completer', completers(casing=False))
@@ -555,9 +547,7 @@ def test_suggest_columns_from_set_returning_function(completer):
     )
     assert result == set(
         testdata.columns('set_returning_func', typ='functions')
-        + testdata.functions()
-        + list(testdata.builtin_functions()
-        + testdata.keywords())
+        + testdata.functions_keywords()
     )
 
 
@@ -837,8 +827,7 @@ def test_suggest_columns_from_cte(completer):
         [
             Completion('foo', 0, display_meta='column'),
             Completion('bar', 0, display_meta='column'),
-        ] + testdata.functions() + testdata.builtin_functions() +
-        testdata.keywords()
+        ] + testdata.functions_keywords()
     )
 
     assert set(expected) == result

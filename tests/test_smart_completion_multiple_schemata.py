@@ -76,9 +76,7 @@ completers = testdata.get_completers(casing)
 def test_suggested_column_names_from_shadowed_visible_table(completer, table):
     result = result_set(completer, 'SELECT  FROM ' + table, len('SELECT '))
     assert result == set(testdata.columns('users') +
-        testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
+        testdata.functions_keywords()
     )
 
 
@@ -90,9 +88,7 @@ def test_suggested_column_names_from_shadowed_visible_table(completer, table):
 def test_suggested_column_names_from_qualified_shadowed_table(completer, text):
     result = result_set(completer, text, position = text.find('  ') + 1)
     assert result == set(testdata.columns('users', 'custom') +
-        testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
+        testdata.functions_keywords()
         )
 
 
@@ -102,8 +98,7 @@ def test_suggested_column_names_from_qualified_shadowed_table(completer, text):
     ])
 def test_suggested_column_names_from_cte(completer, text):
     result = result_set(completer, text, text.find('  ') + 1)
-    assert result == set([column('foo')] + testdata.functions() +
-        list(testdata.builtin_functions() + testdata.keywords())
+    assert result == set([column('foo')] + testdata.functions_keywords()
     )
 
 
@@ -143,8 +138,7 @@ def test_suggested_column_names_from_schema_qualifed_table(completer):
         completer, 'SELECT  from custom.products', len('SELECT ')
     )
     assert result == set(
-        testdata.columns('products', 'custom') + testdata.functions() +
-        list(testdata.builtin_functions() + testdata.keywords())
+        testdata.columns('products', 'custom') + testdata.functions_keywords()
     )
 
 
@@ -209,11 +203,9 @@ def test_suggested_multiple_column_names(completer):
     result = result_set(
         completer, 'SELECT id,  from custom.products', len('SELECT id, ')
     )
-    assert result == set(testdata.columns('products', 'custom') +
-        testdata.functions() +
-        list(testdata.builtin_functions() +
-        testdata.keywords())
-        )
+    assert result == set(
+        testdata.columns('products', 'custom') + testdata.functions_keywords()
+    )
 
 
 @parametrize('completer', completers(filtr=True, casing=False))

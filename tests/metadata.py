@@ -76,6 +76,12 @@ class MetaData(object):
         return [function(escape(x[0] + '()'), pos)
             for x in self.metadata.get('functions', {}).get(schema, [])]
 
+    def functions_keywords(self, schema='public', pos=0):
+        return (
+            self.functions(schema, pos) + self.builtin_functions(pos) +
+            self.keywords(pos)
+        )
+
     def schemas(self, pos=0):
         schemas = set(sch for schs in self.metadata.values() for sch in schs)
         return [schema(escape(s), pos=pos) for s in schemas]
