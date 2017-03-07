@@ -158,6 +158,7 @@ class PGCli(object):
             'asterisk_column_order': c['main']['asterisk_column_order'],
             'qualify_columns': c['main']['qualify_columns'],
             'case_column_headers': c['main'].as_bool('case_column_headers'),
+            'search_path_filter': c['main'].as_bool('search_path_filter'),
             'single_connection': single_connection,
             'keyword_casing': keyword_casing,
         }
