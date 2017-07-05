@@ -8,7 +8,7 @@ metadata = {
     'tables': {
         'public': {
             'users': ['id', 'email', 'first_name', 'last_name'],
-            'orders': ['id', 'ordered_date', 'status'],
+            'orders': ['id', 'ordered_date', 'status', 'datestamp'],
             'select': ['id', 'insert', 'ABC']
         },
         'custom': {
@@ -57,6 +57,13 @@ metadata = {
             ('blog', 'entries', 'entryid', 'blog', 'entrytags', 'entryid'),
             ('blog', 'tags', 'tagid', 'blog', 'entrytags', 'tagid'),
         ],
+    },
+    'defaults': {
+        'public': {
+            ('orders', 'id'): "nextval('orders_id_seq'::regclass)",
+            ('orders', 'datestamp'): "now()",
+            ('orders', 'status'): "'PENDING'::text",
+        }
     },
 }
 
@@ -335,7 +342,7 @@ def test_wildcard_column_expansion_with_insert(completer, text):
     position = text.index('*') + 1
     completions = get_result(completer, text, position)
 
-    expected = [wildcard_expansion('id, ordered_date, status')]
+    expected = [wildcard_expansion('ordered_date, status')]
     assert expected == completions
 
 
