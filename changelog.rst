@@ -8,6 +8,7 @@ Upcoming
 * Quote schema in `SET SCHEMA` statement (issue #469) (Thanks: `Irina Truong`_)
 * Use CLI Helpers for pretty printing query results (Thanks: `Thomas Roten`_).
 * Include arguments in function suggestions (Thanks: `Joakim Koljonen`_)
+* Skip serial columns when expanding * for `INSERT INTO foo(*` (Thanks: `Joakim Koljonen`_).
 
 1.6.0
 =====
